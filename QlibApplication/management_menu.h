@@ -22,11 +22,31 @@
 #include <QMessageBox>
 #include <QToolBar>
 #include <QLabel>
+#include <QKeyEvent>
 
 
 class management_menu : public QWidget
 {
     Q_OBJECT
+
+    /* Панель MenuBar */
+
+    QMenu *menuBar = new QMenu("Управление панелью меню");
+    QAction *action_insert_root_folder = new QAction("Добавить корневую папку", menuBar);
+    QAction *action_insert_folder = new QAction("Добавить папку", menuBar);
+    QAction *action_insert_application = new QAction("Добавить приложение", menuBar);
+    QAction *action_update = new QAction("Обновить", menuBar);
+    QAction *action_delete = new QAction("Удалить", menuBar);
+
+public:
+    management_menu(QWidget *parent = nullptr);
+    ~management_menu();
+
+protected:
+      void showEvent(QShowEvent* event);
+
+private:
+    QSqlDatabase StorageDB;
 
     // Иерархическое древо
 
@@ -36,7 +56,6 @@ class management_menu : public QWidget
     QList<QString> menu_update_list;
     int admMenu_table_row_count;
     int root_model_row;
-
 
     // Блок редактирования имени и объектного имени приложения или папки
 
@@ -48,7 +67,6 @@ class management_menu : public QWidget
     QString last_record_name = " ";
     QString last_record_object_name = " ";
 
-
     // Боковое меню перемещения папок и просмотра доступных ролей
 
     QMenu *menu = new QMenu();
@@ -59,10 +77,9 @@ class management_menu : public QWidget
     QLabel *label = new QLabel();
 
     QMap<int, QString> roles_list_map;
-    QMap<int, int> menu_list_map;
     QMap<int, QString> menu_map_name;
     QList<QString> obgect_name_list;
-
+    QList<int> childID;
 
     // Организация ToolBar
 
@@ -73,7 +90,6 @@ class management_menu : public QWidget
     QPushButton *admMenu_tree_model_update = new QPushButton(QIcon("./Images/Img-019.png"), "Обновить");
     QPushButton *admMenu_tree_model_delete = new QPushButton(QIcon("./Images/Img-004.png"),"Удалить");
 
-
     // Организация centralLayout
 
     QLabel *label_info = new QLabel("На данный момент таблица admMenu недоступна, так как редактируется другим администратором");
@@ -81,18 +97,9 @@ class management_menu : public QWidget
     QHBoxLayout *central_layout = new QHBoxLayout();
     QVBoxLayout *general_layout = new QVBoxLayout();
 
-public:
-    management_menu(QWidget *parent = nullptr);
-    ~management_menu();
-
-private:
-    QSqlDatabase StorageDB;
-
-protected:
-      void showEvent();
-
 signals:
     void sendToolBar(QToolBar* toolbar);
+    void sendMenu(QMenu* menuBar);
 
 private slots:
 
@@ -101,7 +108,7 @@ private slots:
     void create_tree_model_decoration(QStandardItemModel* tree_model, QModelIndex index, QString object_name);
     QString access_application(QString object_name_app);
 
-    void pressed_item_admMenu_tree_model();
+    void pressed_item_admMenu_tree_model(QModelIndex index);
 
     void save_line_name_app_slot();
     void line_name_app_change();
@@ -115,6 +122,10 @@ private slots:
     void menu_layout_create_clear(bool state);
     QModelIndex check_parent_index(QModelIndex index);
     void aboutToHide_slot();
+
+    void managment_menu_display_settings();
+
+    void searchChildFolder(QModelIndex index);
 
 };
 #endif // MANAGEMENT_MENU_H

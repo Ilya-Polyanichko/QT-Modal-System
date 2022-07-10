@@ -46,6 +46,12 @@ class management_roles : public QWidget
     QPushButton *admRoles_table_model_update = new QPushButton(QIcon("./Images/Img-019.png"), "Обновить");
     QPushButton *admRoles_table_model_delete = new QPushButton(QIcon("./Images/Img-004.png"),"Удалить");
 
+    /* Панель MenuBar */
+
+    QMenu *menuBar = new QMenu("Управление ролями");
+    QAction *action_insert = new QAction("Добавить", menuBar);
+    QAction *action_update = new QAction("Обновить", menuBar);
+    QAction *action_delete = new QAction("Удалить", menuBar);
 
     // Блок фильтра пользователей
 
@@ -71,12 +77,6 @@ public:
 private:
     QSqlDatabase StorageDB;
 
-signals:
-    void sendToolBar(QToolBar* toolbar);
-
-protected:
-      void showEvent();
-
 private slots:
 
     QSqlTableModel* create_model();
@@ -92,6 +92,13 @@ private slots:
     void getLogin(QString login, QString general_login);
     void aboutToHide_slot();
     void menu_layout_create_clear(bool state);
+
+protected:
+      void showEvent(QShowEvent* event);
+
+signals:
+    void sendToolBar(QToolBar* toolbar);
+    void sendMenu(QMenu* menuBar);
 
 };
 #endif // MANAGEMENT_ROLES_H

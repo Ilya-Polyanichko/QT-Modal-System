@@ -1,17 +1,25 @@
-/**************************************************************************************************
+/*
  *
- *   1. В конструкторе подключаем базу данных SQLITE - StorageDB и открываем ее.
+ *   1. В конструкторе подключаем базу данных SQLITE - StorageDB и открываем ее. Настраиваем оформление
+ *      приложения. Настраиваем ToolBar и дополнительное меню для menuBar.
  *
- *   2. Создаем иерархическое древо Menu - Bar. Древо создается в функции create_tree_model()
- *      Для создания древа выгружаю таблицу admMenu в модель admMenu_table_model (QSqlTableModel),
- *      после чего используя колонки ID и Parent рекурсивно собираю древо.
+ *   2. Функция create_model() отвечает за созданеие таблицы с данными о ролях
  *
- **************************************************************************************************/
+ *   3. Функция pressed_cell_admRoles_tree_model() обрабатывает нажатие на tableView и в зависимости от
+ *      роли открывает боковое меню с списоко доступных приложений. Функция set_menu_roles() назначает
+ *      либо удаляет приложение для данной роли
+ *
+ *   4. Функции insert_row_admRoles_slot() и admRoles_table_model_delete_slot() отвечают за вставку и
+ *      удаление строк в модели. Функция admRoles_table_model_update_slot() обновляет данные в модели.
+ *
+ *   5. Функция search_admRoles_slot() используется для применения фильтра к модели
+ *
+ */
 
 #include "management_roles.h"
 
-management_roles::management_roles(QWidget *parent) : QWidget(parent) {
-
+management_roles::management_roles(QWidget *parent) : QWidget(parent)
+{
     StorageDB = QSqlDatabase::addDatabase("QSQLITE");
     StorageDB.setDatabaseName("./StorageDB.db");
     StorageDB.open();
@@ -35,6 +43,13 @@ management_roles::management_roles(QWidget *parent) : QWidget(parent) {
     toolBar -> addWidget(admRoles_table_model_update);
     toolBar -> addWidget(admRoles_table_model_delete);
 
+    menuBar -> addAction(action_insert);
+    menuBar -> addAction(action_update);
+    menuBar -> addAction(action_delete);
+
+    connect(action_insert, SIGNAL(triggered()), SLOT(insert_row_admRoles_slot()));
+    connect(action_update, SIGNAL(triggered()), SLOT(admRoles_table_model_update_slot()));
+    connect(action_delete, SIGNAL(triggered()), SLOT(admRoles_table_model_delete_slot()));
 
     search_admRoles -> setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     search_admRoles -> setMaximumHeight(30);
@@ -75,19 +90,15 @@ management_roles::management_roles(QWidget *parent) : QWidget(parent) {
     central_layout -> addLayout(menu_layout);
 
     setLayout(central_layout);
-
 }
 
 management_roles::~management_roles() {}
 
-QSqlTableModel* management_roles::create_model() {
-
+QSqlTableModel* management_roles::create_model()
+{
     QSqlTableModel *admRoles_model = new QSqlTableModel();
-
     admRoles_model->setTable("admRoles");
-
     admRoles_model -> setEditStrategy(QSqlTableModel::OnManualSubmit);
-
     admRoles_model->select();
 
     admRoles_model -> setHeaderData(1, Qt::Horizontal, "Название роли");
@@ -111,21 +122,20 @@ QSqlTableModel* management_roles::create_model() {
     while (query.next()) if (query.value("Object") != "group") menu_list.insert(query.value("ID").toInt(), query.value("Name").toString());
 
     return admRoles_model;
-
 }
 
-void management_roles::pressed_cell_admRoles_tree_model() {
-
+void management_roles::pressed_cell_admRoles_tree_model()
+{
     QModelIndex index = tableView -> currentIndex();
     menu_layout_create_clear(false);
     int ID = admRoles_table_model -> data(admRoles_table_model -> index(index.row(), 0)).toInt();
 
-    if (index.column() == 1 && menu_list.size() > 0) {
-
+    if (index.column() == 1 && menu_list.size() > 0)
+    {
         QMap<int, QAction*> list_action;
 
-        for( auto key : menu_list.keys()) {
-
+        for( auto key : menu_list.keys())
+        {
             QAction *action = new QAction(menu_list.value(key));
             action -> setCheckable(true);
             action -> setObjectName(QString::number(key));
@@ -136,32 +146,29 @@ void management_roles::pressed_cell_admRoles_tree_model() {
 
             menu -> addAction(action);
             list_action.insert(key, action);
-
         }
 
 
-        for (int row = 0; row < admRolesMenu_table_model -> rowCount(); row ++) {
-
+        for (int row = 0; row < admRolesMenu_table_model -> rowCount(); row ++)
+        {
             QSqlRecord record = admRolesMenu_table_model -> record(row);
 
-            if (ID == record.value("admRoles_ID")) {
-
+            if (ID == record.value("admRoles_ID"))
+            {
                 list_action.value(record.value("admMenu_ID").toInt()) -> setChecked(true);
                 roles_list.insert(record.value("admMenu_ID").toInt(), ID);
-
             }
-
         }
-
         menu_layout_create_clear(true);
     }
 }
 
-void management_roles::set_menu_roles() {
-
+void management_roles::set_menu_roles()
+{
     QModelIndex index = admRoles_table_model -> index(tableView -> currentIndex().row(), 0);
 
-    for( auto & key : roles_list.keys()) if (key == sender() -> objectName().toInt()) {
+    for( auto & key : roles_list.keys()) if (key == sender() -> objectName().toInt())
+    {
         roles_list.remove(key);
         management_roles_update_list.append(QString("DELETE FROM admRolesMenu WHERE admRoles_ID = '%1' AND admMenu_ID = '%2'")
                                  .arg(admRoles_table_model -> data(index).toString())
@@ -176,13 +183,12 @@ void management_roles::set_menu_roles() {
     QSize rec = management_roles::size();
     menu -> setMinimumHeight(rec.height());
     menu -> setMinimumHeight(0);
-
 }
 
-void management_roles::admRoles_table_model_update_slot() {
-
-    if (admRoles_table_model -> isDirty() == true || management_roles_update_list.size() != 0) {
-
+void management_roles::admRoles_table_model_update_slot()
+{
+    if (admRoles_table_model -> isDirty() == true || management_roles_update_list.size() != 0)
+    {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setWindowTitle("Подтвердите изменения");
@@ -193,8 +199,8 @@ void management_roles::admRoles_table_model_update_slot() {
 
         msgBox.exec();
 
-        if (msgBox.clickedButton() == connectButton) {
-
+        if (msgBox.clickedButton() == connectButton)
+        {
             QSqlQuery query = QSqlQuery(StorageDB);
             for (int i = 0; i < management_roles_update_list.size(); i ++) query.exec(management_roles_update_list[i]);
 
@@ -203,35 +209,30 @@ void management_roles::admRoles_table_model_update_slot() {
 
             admRoles_table_model = create_model();
             tableView -> setModel(admRoles_table_model);
-
-        } else if (msgBox.clickedButton() == abortButton) {}
-
-    } else {
-
+        }
+        else if (msgBox.clickedButton() == abortButton) {}
+    }
+    else
+    {
         admRoles_table_model = create_model();
         tableView -> setModel(admRoles_table_model);
-
     }
-
 }
 
-void management_roles::insert_row_admRoles_slot() {
-
+void management_roles::insert_row_admRoles_slot()
+{
     admRoles_table_model -> insertRow(admRoles_table_model -> rowCount());
-
 }
 
-void management_roles::admRoles_table_model_delete_slot() {
-
+void management_roles::admRoles_table_model_delete_slot()
+{
     if (tableView -> currentIndex().row() != row_general_admin) admRoles_table_model -> removeRow(tableView -> currentIndex().row());
-
 }
 
-void management_roles::search_admRoles_slot() {
-
-
-    if (admRoles_table_model -> isDirty() == true && search_admRoles -> text().isEmpty() == false) {
-
+void management_roles::search_admRoles_slot()
+{
+    if (admRoles_table_model -> isDirty() == true && search_admRoles -> text().isEmpty() == false)
+    {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.setWindowTitle("Подтвердите изменения");
@@ -242,51 +243,51 @@ void management_roles::search_admRoles_slot() {
 
         msgBox.exec();
 
-        if (msgBox.clickedButton() == connectButton) {
-
+        if (msgBox.clickedButton() == connectButton)
+        {
             admRoles_table_model_update_slot();
             admRoles_table_model -> setFilter(QString("Roles = '%1'").arg(search_admRoles -> text()));
-
         }
-
-    } else if (search_admRoles -> text().isEmpty() == false) {
-
-        admRoles_table_model -> setFilter(QString("Roles = '%1'").arg(search_admRoles -> text()));
-
     }
-
+    else if (search_admRoles -> text().isEmpty() == false)
+    {
+        admRoles_table_model -> setFilter(QString("Roles = '%1'").arg(search_admRoles -> text()));
+    }
 }
 
-void management_roles::getLogin(QString login, QString general_login) {
-
+void management_roles::getLogin(QString login, QString general_login)
+{
     (login == general_login) ? general_admin = true : general_admin = false;
     if (general_admin == false) tableView -> hideRow(row_general_admin);
-
 }
 
-void management_roles::aboutToHide_slot() { menu_layout_create_clear(true); }
+void management_roles::aboutToHide_slot()
+{
+    menu_layout_create_clear(true);
+}
 
-void management_roles::menu_layout_create_clear(bool state) {
-
-    if (state == false) {
-
+void management_roles::menu_layout_create_clear(bool state)
+{
+    if (state == false)
+    {
         label -> setVisible(false);
         menu_layout -> removeWidget(menu);
         menu -> clear();
-
-    } else {
-
+    }
+    else
+    {
         menu_layout -> addWidget(label);
         menu_layout -> addWidget(menu);
         label -> setVisible(true);
         menu -> show();
-
     }
-
 }
 
-void management_roles::showEvent() {
-
+void management_roles::showEvent(QShowEvent* event)
+{
     emit sendToolBar(toolBar);
+    emit sendMenu(menuBar);
+
+    qDebug() << toolBar << menuBar->actions();
 
 }

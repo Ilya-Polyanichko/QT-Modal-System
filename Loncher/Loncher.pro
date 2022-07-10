@@ -15,11 +15,13 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
+    database.cpp \
         loncher.cpp \
     access.cpp
 
 HEADERS  += loncher.h \
-    access.h
+    access.h \
+    database.h
 
 INCLUDEPATH += ../
 

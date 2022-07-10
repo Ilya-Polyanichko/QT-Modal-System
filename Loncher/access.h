@@ -1,48 +1,50 @@
 #ifndef ACCESS_H
 #define ACCESS_H
 
-#include <QWidget>
+#include <QDialog>
+
 #include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QLineEdit>
-#include <QKeyEvent>
 #include <QCompleter>
 #include <QComboBox>
-#include <QPushButton>
+#include <QFontDatabase>
+#include <QListView>
+
 
 #include "QlibApplication/qlibapplication.h"
 
-class Access : public QWidget {
+class Access : public QDialog {
 
     Q_OBJECT
 
-QComboBox *qComboBox_login = new QComboBox();
-QPushButton *confirm = new QPushButton("Подтвердить");
-
-QLineEdit *login = new QLineEdit();
-QLineEdit *pass = new QLineEdit();
-QList<QString> App_list;
-QlibApplication App;
-
-QList<QString> login_list;
-
 public:
+
     explicit Access(QWidget *parent = 0);
     ~Access();
 
-signals:
-    void sendText(QString name, QString login, QList<QString> App_list);
-
-private slots:
-    void verification();
-    void sorting(QString Roles, QList<QString> &App_list);
-    void check_line();
+    QString name;
+    QLineEdit *login = new QLineEdit();
+    QList<QString> App_list;
 
 private:
+
     QSqlDatabase StorageDB;
 
-protected:
-    void keyPressEvent(QKeyEvent *event) override;
+    QList<QString> login_list;
+
+    QComboBox *qComboBox_login = new QComboBox();
+    QLineEdit *pass = new QLineEdit();
+    QPushButton *confirm = new QPushButton("Подтвердить");
+
+    QlibApplication App;
+
+private slots:
+
+    void access_display_settings();
+    void authentication();
+    void authorization(QString ID);
+
+    void search_application(QString Roles);
+    void check_line();
 
 };
 

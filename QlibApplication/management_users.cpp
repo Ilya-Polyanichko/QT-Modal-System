@@ -1,3 +1,21 @@
+/*
+ *
+ *   1. В конструкторе подключаем базу данных SQLITE - StorageDB и открываем ее. Настраиваем оформление
+ *      приложения. Настраиваем ToolBar и дополнительное меню для menuBar.
+ *
+ *   2. Функция create_model() отвечает за созданеие таблицы с данными о пользователях
+ *
+ *   3. Функция pressed_cell_admRoles_tree_model() обрабатывает нажатие на tableView и в зависимости от
+ *      роли открывает боковое меню с списоко доступных приложений. Функция set_users_roles() назначает
+ *      либо удаляет роль для данного пользователя
+ *
+ *   4. Функции insert_row_admUsers_slot() и admUsers_table_model_delete_slot() отвечают за вставку и
+ *      удаление строк в модели. Функция management_users_update_slot() обновляет данные в модели.
+ *
+ *   5. Функция search_admUsers_slot() используется для применения фильтра к модели
+ *
+ */
+
 #include "management_users.h"
 
 management_users::management_users(QWidget *parent) : QWidget(parent) {
@@ -24,6 +42,14 @@ management_users::management_users(QWidget *parent) : QWidget(parent) {
     toolBar -> addWidget(insert_row_admUsers);
     toolBar -> addWidget(management_users_update);
     toolBar -> addWidget(delete_row_admUsers);
+
+    menuBar -> addAction(action_insert);
+    menuBar -> addAction(action_update);
+    menuBar -> addAction(action_delete);
+
+    connect(action_insert, SIGNAL(triggered()), SLOT(insert_row_admUsers_slot()));
+    connect(action_update, SIGNAL(triggered()), SLOT(management_users_update_slot()));
+    connect(action_delete, SIGNAL(triggered()), SLOT(delete_row_admUsers_slot()));
 
     search_admUsers -> setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     search_admUsers -> setMaximumHeight(30);
@@ -272,8 +298,8 @@ void management_users::menu_layout_create_clear(bool state) {
 
 }
 
-void management_users::showEvent(QShowEvent* event) {
-
+void management_users::showEvent(QShowEvent* event)
+{
     emit sendToolBar(toolBar);
-
+    emit sendMenu(menuBar);
 }

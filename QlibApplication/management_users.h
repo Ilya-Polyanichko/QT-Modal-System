@@ -54,6 +54,13 @@ class management_users : public QWidget
     QPushButton *management_users_update = new QPushButton(QIcon("./Images/Img-019.png"), "Обновить");
     QPushButton *delete_row_admUsers = new QPushButton(QIcon("./Images/Img-004.png"),"Удалить");
 
+    /* Панель MenuBar */
+
+    QMenu *menuBar = new QMenu("Управление пользователями");
+    QAction *action_insert = new QAction("Добавить", menuBar);
+    QAction *action_update = new QAction("Обновить", menuBar);
+    QAction *action_delete = new QAction("Удалить", menuBar);
+
 
     /* Виджеты для фильтра пользователей */
 
@@ -74,6 +81,7 @@ private:
 
 signals:
     void sendToolBar(QToolBar* toolbar);
+    void sendMenu(QMenu* menuBar);
 
 protected:
       void showEvent(QShowEvent *event);
